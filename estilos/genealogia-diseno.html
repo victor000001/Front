@@ -1,0 +1,851 @@
+<title>Genealogía del Diseño de Interfaces</title>
+<style>
+/* ============ TOKENS / GALERÍA (theme-aware) ============ */
+:root{
+  --bg:#EDEEF2; --panel:#F7F8FB; --card:#FFFFFF; --ink:#15171D; --muted:#5C6270;
+  --line:#D9DCE4; --anc:#B4762E; --anc-soft:#F3E6D2; --mod:#3B4EE0; --mod-soft:#E1E4FB;
+  --trans:#7C6BB0; --trans-soft:#E9E5F5;
+  --serif:Georgia,"Palatino Linotype","Book Antiqua",serif;
+  --sans:system-ui,-apple-system,"Helvetica Neue",Arial,sans-serif;
+  --mono:ui-monospace,"SF Mono","Cascadia Mono",Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root{ --bg:#0D0E12; --panel:#15171D; --card:#191C24; --ink:#F2F3F7; --muted:#9AA1B2;
+    --line:#2A2E3A; --anc:#D69A4B; --anc-soft:#3A2E1B; --mod:#7285FF; --mod-soft:#1E2340;
+    --trans:#A99BE0; --trans-soft:#241F38; }
+}
+:root[data-theme="light"]{ --bg:#EDEEF2; --panel:#F7F8FB; --card:#FFFFFF; --ink:#15171D; --muted:#5C6270;
+  --line:#D9DCE4; --anc:#B4762E; --anc-soft:#F3E6D2; --mod:#3B4EE0; --mod-soft:#E1E4FB; --trans:#7C6BB0; --trans-soft:#E9E5F5; }
+:root[data-theme="dark"]{ --bg:#0D0E12; --panel:#15171D; --card:#191C24; --ink:#F2F3F7; --muted:#9AA1B2;
+  --line:#2A2E3A; --anc:#D69A4B; --anc-soft:#3A2E1B; --mod:#7285FF; --mod-soft:#1E2340; --trans:#A99BE0; --trans-soft:#241F38; }
+
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--ink);font-family:var(--sans);line-height:1.55;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+img{max-width:100%}
+button{font-family:inherit}
+
+/* ---- Gallery header ---- */
+.wrap{max-width:1240px;margin:0 auto;padding:0 24px}
+.masthead{padding:70px 0 30px;border-bottom:1px solid var(--line);position:relative}
+.kicker{font-family:var(--mono);font-size:12.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:10px}
+.kicker::before{content:"";width:26px;height:1px;background:var(--anc)}
+.masthead h1{font-family:var(--serif);font-weight:600;font-size:clamp(38px,6vw,72px);line-height:1.02;letter-spacing:-.02em;margin:16px 0 14px;text-wrap:balance;max-width:15ch}
+.masthead .lead{max-width:62ch;color:var(--muted);font-size:clamp(16px,2vw,19px)}
+.theme-tgl{position:absolute;top:70px;right:24px;background:var(--card);border:1px solid var(--line);color:var(--ink);
+  border-radius:999px;padding:9px 16px;font-size:13px;cursor:pointer;display:flex;gap:8px;align-items:center}
+.theme-tgl:hover{border-color:var(--muted)}
+
+/* ---- Legend ---- */
+.legend{display:flex;flex-wrap:wrap;gap:14px 26px;margin:26px 0 4px;font-size:13.5px;color:var(--muted);align-items:center}
+.lg{display:flex;align-items:center;gap:9px}
+.dot{width:13px;height:13px;border-radius:4px;flex:0 0 auto}
+.dot.anc{background:var(--anc)} .dot.trans{background:var(--trans)} .dot.mod{background:var(--mod)}
+
+/* ---- Era scale ---- */
+.scale{margin:40px 0 8px}
+.scale-bar{height:6px;border-radius:3px;background:linear-gradient(90deg,var(--anc),var(--trans),var(--mod))}
+.scale-ticks{display:flex;justify-content:space-between;margin-top:8px;font-family:var(--mono);font-size:12px;color:var(--muted)}
+
+/* ---- Lanes / families ---- */
+.lanes{padding:36px 0 90px}
+.lane{margin-bottom:44px}
+.lane-head{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap}
+.lane-num{font-family:var(--serif);font-size:34px;color:var(--anc);line-height:1;font-weight:600}
+.lane-head h2{font-family:var(--serif);font-weight:600;font-size:clamp(21px,3vw,28px);margin:0;letter-spacing:-.01em}
+.lane-head .lane-desc{color:var(--muted);font-size:14px;margin:0;flex:1;min-width:220px}
+.lane-arrow{display:flex;align-items:center;gap:12px;margin:14px 0 20px;font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.lane-arrow .bar{flex:1;height:3px;border-radius:2px;background:linear-gradient(90deg,var(--anc),var(--trans) 45%,var(--mod))}
+.track{display:flex;flex-wrap:wrap;gap:16px}
+
+.node{position:relative;width:168px;flex:0 0 auto;background:var(--card);border:1px solid var(--line);
+  border-radius:16px;padding:14px;cursor:pointer;text-align:left;color:inherit;transition:transform .22s,box-shadow .22s,border-color .22s;overflow:hidden}
+.node:hover{transform:translateY(-7px);box-shadow:0 18px 34px -18px rgba(0,0,0,.4)}
+.node:focus-visible{outline:2px solid var(--mod);outline-offset:3px}
+.node .swatch{display:block;height:78px;border-radius:10px;margin-bottom:12px;position:relative;overflow:hidden;border:1px solid rgba(0,0,0,.06)}
+.node .n-name{display:block;font-weight:700;font-size:15.5px;letter-spacing:-.01em;line-height:1.15}
+.node .n-year{display:block;font-family:var(--mono);font-size:12px;color:var(--muted);margin-top:3px}
+.node .n-tag{display:block;font-size:12px;color:var(--muted);margin-top:8px;line-height:1.35}
+.node .era{position:absolute;top:8px;left:8px;z-index:3;font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;
+  padding:4px 7px;border-radius:6px;font-weight:600;box-shadow:0 2px 6px rgba(0,0,0,.35)}
+.node--ancestor{border-color:color-mix(in srgb,var(--anc) 55%,var(--line))}
+.node--ancestor .era{background:var(--anc);color:#fff}
+.node--ancestor::after{content:"";position:absolute;inset:0;border-radius:16px;pointer-events:none;box-shadow:inset 0 0 0 1px color-mix(in srgb,var(--anc) 35%,transparent)}
+.node--transition .era{background:var(--trans);color:#fff}
+.node--modern .era{background:var(--mod);color:#fff}
+
+/* ============ DEMO SHELL ============ */
+.demo-host{position:fixed;inset:0;z-index:1000;overflow-y:auto;overflow-x:hidden;display:none;background:#111}
+.demo-host.on{display:block}
+body.locked{overflow:hidden}
+.backbtn{position:fixed;left:18px;bottom:18px;z-index:1200;background:rgba(15,16,22,.82);color:#fff;
+  border:1px solid rgba(255,255,255,.35);border-radius:999px;padding:12px 20px;font-size:14px;font-weight:600;
+  font-family:var(--sans);cursor:pointer;backdrop-filter:blur(10px);box-shadow:0 10px 30px -10px rgba(0,0,0,.6);display:flex;gap:8px;align-items:center}
+.backbtn:hover{background:rgba(15,16,22,.95);transform:translateY(-2px)}
+.backbtn:focus-visible{outline:2px solid #fff;outline-offset:2px}
+
+/* shared demo primitives (overridden per style) */
+.demo{min-height:100vh;display:flex;flex-direction:column;font-family:var(--sans)}
+.d-nav{display:flex;justify-content:space-between;align-items:center;gap:20px;padding:22px 6vw}
+.d-brand{font-weight:800;font-size:20px;letter-spacing:-.01em}
+.d-links{display:flex;gap:26px;flex-wrap:wrap}
+.d-links a{font-size:14px;text-decoration:none;color:inherit;opacity:.8;cursor:pointer}
+.d-links a:hover{opacity:1}
+.d-hero{padding:9vh 6vw 6vh;display:flex;flex-direction:column;gap:22px;max-width:1000px}
+.d-eyebrow{font-family:var(--mono);font-size:13px;letter-spacing:.16em;text-transform:uppercase;opacity:.75}
+.d-hero h1{font-size:clamp(38px,7vw,84px);line-height:1.02;margin:0;letter-spacing:-.02em;text-wrap:balance}
+.d-sub{font-size:clamp(17px,2.2vw,22px);max-width:56ch;margin:0;opacity:.85}
+.d-btns{display:flex;gap:16px;flex-wrap:wrap;margin-top:6px}
+.btn{padding:15px 30px;border-radius:12px;border:none;font-size:15px;font-weight:700;cursor:pointer;font-family:inherit}
+.d-features{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:22px;padding:5vh 6vw}
+.card{padding:30px;border-radius:18px}
+.card .c-ico{font-size:34px;margin-bottom:14px}
+.card h3{margin:0 0 8px;font-size:20px}
+.card p{margin:0;opacity:.82;font-size:15px}
+.d-cta{padding:13vh 6vw;text-align:center;display:flex;flex-direction:column;align-items:center;gap:26px}
+.d-cta h2{font-size:clamp(30px,5vw,58px);margin:0;line-height:1.05;letter-spacing:-.02em;max-width:20ch}
+.d-foot{margin-top:auto;padding:44px 6vw;font-size:13.5px;opacity:.7;border-top:1px solid rgba(128,128,128,.25)}
+
+/* =========================================================
+   ESTILOS — cada uno su propio mundo visual (mono-tema)
+   ========================================================= */
+
+/* 1 SKEUOMORFISMO */
+.s-skeuomorphism{background:
+  repeating-linear-gradient(45deg,#e9e0c8 0 2px,#ece4cf 2px 4px);color:#3a2f1c;font-family:var(--serif)}
+.s-skeuomorphism .d-nav{background:linear-gradient(#5a4327,#3c2c17);color:#f4ead0;box-shadow:0 4px 0 #2a1f10,inset 0 1px 0 rgba(255,255,255,.25)}
+.s-skeuomorphism .d-brand{text-shadow:0 1px 0 rgba(0,0,0,.5)}
+.s-skeuomorphism .d-hero h1{color:#4a3720;text-shadow:0 1px 0 #fff}
+.s-skeuomorphism .card{background:linear-gradient(#fffdf5,#efe4c9);border:1px solid #cbb98d;
+  box-shadow:inset 0 1px 0 #fff,0 8px 16px -8px rgba(80,60,20,.5);border-radius:8px}
+.s-skeuomorphism .btn-p{background:linear-gradient(#6fb2f0,#3a7fd0);color:#fff;border:1px solid #2b64a8;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.6),0 3px 0 #285a95,0 6px 10px -4px rgba(0,0,0,.4);border-radius:9px;text-shadow:0 -1px 0 rgba(0,0,0,.3)}
+.s-skeuomorphism .btn-s{background:linear-gradient(#fdfaf0,#ddd0af);color:#4a3720;border:1px solid #b6a479;box-shadow:inset 0 1px 0 #fff,0 3px 0 #b6a479;border-radius:9px}
+.s-skeuomorphism .d-cta{background:linear-gradient(#2e5a3e,#1f4029);color:#f0ecd8;margin:0 4vw;border-radius:14px;box-shadow:inset 0 0 40px rgba(0,0,0,.4)}
+
+/* 2 FLAT */
+.s-flat{background:#ecf0f1;color:#2c3e50;font-family:var(--sans)}
+.s-flat .d-nav{background:#2c3e50;color:#fff}
+.s-flat .d-hero{background:#1abc9c;color:#fff;max-width:none;padding:12vh 6vw}
+.s-flat .d-eyebrow{opacity:.9}
+.s-flat .card{background:#fff;border-radius:0}
+.s-flat .card:nth-child(1){border-top:5px solid #3498db}
+.s-flat .card:nth-child(2){border-top:5px solid #e74c3c}
+.s-flat .card:nth-child(3){border-top:5px solid #f1c40f}
+.s-flat .btn{border-radius:0}
+.s-flat .btn-p{background:#e74c3c;color:#fff}
+.s-flat .btn-s{background:transparent;color:#fff;box-shadow:inset 0 0 0 2px #fff}
+.s-flat .d-cta{background:#34495e;color:#fff}
+.s-flat .d-cta .btn-p{background:#1abc9c}
+
+/* 3 MATERIAL */
+.s-material{background:#fafafa;color:#212121;font-family:var(--sans)}
+.s-material .d-nav{background:#3f51b5;color:#fff;box-shadow:0 2px 6px rgba(0,0,0,.25)}
+.s-material .d-hero{background:#5c6bc0;color:#fff;max-width:none}
+.s-material .card{background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2);border-radius:8px;transition:box-shadow .2s}
+.s-material .card:hover{box-shadow:0 8px 24px rgba(0,0,0,.28)}
+.s-material .btn{border-radius:6px;text-transform:uppercase;letter-spacing:.06em;font-size:14px;box-shadow:0 2px 4px rgba(0,0,0,.3)}
+.s-material .btn-p{background:#ff4081;color:#fff}
+.s-material .btn-s{background:#fff;color:#3f51b5}
+.s-material .d-cta{background:#e8eaf6}
+.s-material .d-cta .btn-p{background:#3f51b5;border-radius:50px;padding:16px 40px}
+
+/* 4 NEUMORFISMO */
+.s-neumorphism{background:#e0e5ec;color:#4a5568;font-family:var(--sans)}
+.s-neumorphism .d-nav,.s-neumorphism .d-foot{color:#5a6577}
+.s-neumorphism .d-brand{color:#5a6577}
+.s-neumorphism .card{background:#e0e5ec;border-radius:22px;box-shadow:9px 9px 18px #bcc2cc,-9px -9px 18px #ffffff}
+.s-neumorphism .d-hero h1{color:#5a6577;text-shadow:1px 1px 1px #fff}
+.s-neumorphism .btn{border-radius:16px;background:#e0e5ec;color:#5a6577;box-shadow:6px 6px 12px #bcc2cc,-6px -6px 12px #ffffff}
+.s-neumorphism .btn-p{color:#5566d6}
+.s-neumorphism .btn:active{box-shadow:inset 5px 5px 10px #bcc2cc,inset -5px -5px 10px #ffffff}
+.s-neumorphism .d-cta h2{color:#5a6577}
+
+/* 5 GLASSMORFISMO */
+.s-glassmorphism{color:#fff;font-family:var(--sans);position:relative;background:#0b1030}
+.s-glassmorphism::before{content:"";position:fixed;inset:0;z-index:0;background:
+  radial-gradient(40vw 40vw at 15% 20%,#ff5c9d,transparent 60%),
+  radial-gradient(45vw 45vw at 85% 15%,#5cc8ff,transparent 60%),
+  radial-gradient(50vw 50vw at 60% 90%,#9b5cff,transparent 60%),#0b1030}
+.s-glassmorphism>*{position:relative;z-index:1}
+.s-glassmorphism .d-nav,.s-glassmorphism .card,.s-glassmorphism .btn{
+  background:rgba(255,255,255,.14);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);
+  border:1px solid rgba(255,255,255,.28)}
+.s-glassmorphism .d-nav{border-radius:0 0 20px 20px}
+.s-glassmorphism .card{border-radius:20px}
+.s-glassmorphism .btn{color:#fff;border-radius:14px}
+.s-glassmorphism .btn-p{background:rgba(255,255,255,.28)}
+.s-glassmorphism .d-cta h2{text-shadow:0 2px 20px rgba(0,0,0,.3)}
+
+/* 6 CLAYMORFISMO */
+.s-claymorphism{background:#c9dbff;color:#3d3a6b;font-family:var(--sans)}
+.s-claymorphism .d-nav{background:#fff;border-radius:0 0 30px 30px;box-shadow:0 10px 25px -12px rgba(80,90,200,.5)}
+.s-claymorphism .d-hero h1{color:#5b4bd4}
+.s-claymorphism .card{background:#fff;border-radius:34px;
+  box-shadow:inset 6px 6px 12px rgba(255,255,255,.9),inset -6px -6px 12px rgba(150,160,220,.35),0 14px 26px -10px rgba(90,80,200,.4)}
+.s-claymorphism .card:nth-child(2){background:#ffe3ef}
+.s-claymorphism .card:nth-child(3){background:#e2fbe8}
+.s-claymorphism .btn{border-radius:26px;box-shadow:inset 3px 3px 6px rgba(255,255,255,.7),inset -3px -3px 6px rgba(0,0,0,.12),0 10px 18px -8px rgba(90,80,200,.5)}
+.s-claymorphism .btn-p{background:#7c6bff;color:#fff}
+.s-claymorphism .btn-s{background:#ffb3d1;color:#7a2a52}
+.s-claymorphism .d-cta{background:#fff;margin:0 4vw 5vh;border-radius:40px;box-shadow:0 20px 40px -20px rgba(90,80,200,.5)}
+
+/* 7 LIQUID GLASS */
+.s-liquidglass{color:#fff;font-family:var(--sans);position:relative;background:#05060f}
+.s-liquidglass::before{content:"";position:fixed;inset:0;z-index:0;background:
+  radial-gradient(60vw 60vw at 70% 10%,#2b6cff55,transparent 60%),
+  radial-gradient(50vw 50vw at 10% 80%,#00e0c855,transparent 60%),
+  linear-gradient(160deg,#0a0f22,#05060f);}
+.s-liquidglass>*{position:relative;z-index:1}
+.s-liquidglass .d-nav{background:rgba(255,255,255,.06);backdrop-filter:blur(30px) saturate(180%);
+  -webkit-backdrop-filter:blur(30px) saturate(180%);border:1px solid rgba(255,255,255,.16);
+  border-radius:999px;margin:16px 5vw;padding:14px 26px}
+.s-liquidglass .d-hero h1{background:linear-gradient(120deg,#fff,#8fb6ff);-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:800}
+.s-liquidglass .card{background:linear-gradient(140deg,rgba(255,255,255,.16),rgba(255,255,255,.04));
+  backdrop-filter:blur(24px) saturate(160%);-webkit-backdrop-filter:blur(24px) saturate(160%);
+  border:1px solid rgba(255,255,255,.2);border-radius:26px;box-shadow:inset 0 1px 0 rgba(255,255,255,.4),0 20px 50px -25px #000;position:relative;overflow:hidden}
+.s-liquidglass .card::before{content:"";position:absolute;top:-40%;left:-20%;width:80%;height:80%;
+  background:radial-gradient(circle,rgba(255,255,255,.5),transparent 70%);filter:blur(20px);animation:lgShine 6s ease-in-out infinite}
+@keyframes lgShine{0%,100%{transform:translate(0,0)}50%{transform:translate(40%,40%)}}
+.s-liquidglass .btn{border-radius:999px;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,.25)}
+.s-liquidglass .btn-p{background:linear-gradient(120deg,#3b82ff,#00e0c8);color:#04121f}
+.s-liquidglass .btn-s{background:rgba(255,255,255,.12);color:#fff}
+
+/* 8 SWISS */
+.s-swiss{background:#fff;color:#000;font-family:"Helvetica Neue",Arial,var(--sans)}
+.s-swiss .d-nav{border-bottom:2px solid #000;padding:20px 5vw}
+.s-swiss .d-brand{font-weight:800;letter-spacing:-.03em}
+.s-swiss .d-hero{max-width:none;padding:8vh 5vw}
+.s-swiss .d-hero h1{font-weight:800;font-size:clamp(48px,11vw,140px);letter-spacing:-.04em;line-height:.92}
+.s-swiss .d-eyebrow{color:#e2231a}
+.s-swiss .d-features{border-top:2px solid #000}
+.s-swiss .card{border-radius:0;border-right:1px solid #000;padding:34px 5vw 34px 0}
+.s-swiss .card .c-ico{color:#e2231a;font-size:26px;font-weight:800}
+.s-swiss .btn{border-radius:0;font-weight:700}
+.s-swiss .btn-p{background:#e2231a;color:#fff}
+.s-swiss .btn-s{background:#000;color:#fff}
+.s-swiss .d-cta h2{font-weight:800;font-size:clamp(36px,8vw,96px);letter-spacing:-.03em}
+
+/* 9 MINIMALISMO */
+.s-minimalism{background:#fbfbfa;color:#1a1a1a;font-family:var(--sans);font-weight:300}
+.s-minimalism .d-nav{padding:34px 8vw;border:none}
+.s-minimalism .d-brand{font-weight:400;letter-spacing:.02em}
+.s-minimalism .d-links a{opacity:.55}
+.s-minimalism .d-hero{padding:16vh 8vw 8vh}
+.s-minimalism .d-hero h1{font-weight:300;font-size:clamp(34px,6vw,62px);letter-spacing:-.01em}
+.s-minimalism .d-sub{font-weight:300;opacity:.6}
+.s-minimalism .card{background:transparent;border-top:1px solid #e2e2df;padding:30px 0}
+.s-minimalism .card h3{font-weight:400}
+.s-minimalism .btn{border-radius:0;background:transparent;color:#1a1a1a;border-bottom:1px solid #1a1a1a;padding:8px 2px;font-weight:400}
+.s-minimalism .d-cta h2{font-weight:300}
+
+/* 10 EDITORIAL */
+.s-editorial{background:#fff;color:#111;font-family:var(--serif)}
+.s-editorial .d-nav{border-bottom:3px double #111;padding:18px 6vw}
+.s-editorial .d-brand{font-size:30px;letter-spacing:.02em;font-weight:700}
+.s-editorial .d-links a{font-variant:small-caps;letter-spacing:.05em}
+.s-editorial .d-hero h1{font-size:clamp(40px,8vw,92px);line-height:1;font-weight:700}
+.s-editorial .d-eyebrow{color:#8a1c1c;font-family:var(--serif);font-style:italic;text-transform:none;letter-spacing:0}
+.s-editorial .btn{border-radius:0;font-family:var(--sans);text-transform:uppercase;letter-spacing:.1em;font-size:12px}
+.s-editorial .btn-p{background:#8a1c1c;color:#fff}
+.s-editorial .btn-s{background:#111;color:#fff}
+
+/* 11 BENTO */
+.s-bento{background:#f2f3f7;color:#1a1c22;font-family:var(--sans)}
+.s-bento .d-nav{padding:22px 5vw}
+.s-bento .btn{border-radius:12px}
+.s-bento .btn-p{background:#111318;color:#fff}
+.s-bento .btn-s{background:#fff;color:#111;border:1px solid #ddd}
+
+/* 12 BRUTALISMO */
+.s-brutalism{background:#fff;color:#000;font-family:"Times New Roman",var(--serif)}
+.s-brutalism .d-nav{border-bottom:4px solid #000}
+.s-brutalism .d-links a{color:#00e;text-decoration:underline}
+.s-brutalism .d-hero h1{font-family:"Courier New",monospace;font-weight:700;text-transform:uppercase}
+.s-brutalism .d-eyebrow{font-family:"Courier New",monospace;background:#000;color:#fff;padding:2px 6px;align-self:flex-start}
+.s-brutalism .card{border:3px solid #000;border-radius:0;background:#fff}
+.s-brutalism .card:nth-child(2){background:#ff0}
+.s-brutalism .btn{border:3px solid #000;border-radius:0;background:#fff;color:#000;font-family:"Courier New",monospace}
+.s-brutalism .btn-p{background:#000;color:#fff}
+.s-brutalism .d-cta{background:#000;color:#fff;margin:4vh 0}
+.s-brutalism .d-cta h2{font-family:"Courier New",monospace;text-transform:uppercase}
+
+/* 13 NEO-BRUTALISMO */
+.s-neobrutalism{background:#fdec5f;color:#111;font-family:var(--sans);font-weight:600}
+.s-neobrutalism .d-nav{background:#fff;border-bottom:4px solid #000}
+.s-neobrutalism .d-brand{font-weight:900}
+.s-neobrutalism .d-hero h1{font-weight:900;text-transform:uppercase;letter-spacing:-.02em}
+.s-neobrutalism .card{background:#fff;border:4px solid #000;border-radius:14px;box-shadow:8px 8px 0 #000;transition:transform .15s,box-shadow .15s}
+.s-neobrutalism .card:hover{transform:translate(-3px,-3px);box-shadow:11px 11px 0 #000}
+.s-neobrutalism .card:nth-child(1){background:#7ce7ff}
+.s-neobrutalism .card:nth-child(2){background:#ff8fd0}
+.s-neobrutalism .card:nth-child(3){background:#a6ff8f}
+.s-neobrutalism .btn{border:4px solid #000;border-radius:12px;box-shadow:5px 5px 0 #000;font-weight:800}
+.s-neobrutalism .btn-p{background:#7c5cff;color:#fff}
+.s-neobrutalism .btn-s{background:#fff;color:#000}
+.s-neobrutalism .d-cta h2{font-weight:900;text-transform:uppercase}
+
+/* 14 ANTI-DESIGN */
+.s-antidesign{background:#00d2ff;color:#111;font-family:"Comic Sans MS","Comic Sans",cursive}
+.s-antidesign .d-nav{background:#ff2d95;transform:rotate(-1.2deg)}
+.s-antidesign .d-brand{font-family:"Times New Roman",serif;font-size:30px;color:#0f0;text-shadow:2px 2px #000}
+.s-antidesign .d-links a{text-decoration:underline overline;color:#00f}
+.s-antidesign .d-hero h1{color:#fff;text-shadow:3px 3px 0 #f0f,-2px -2px 0 #0ff;transform:rotate(1.5deg);font-family:Impact,var(--sans)}
+.s-antidesign .d-eyebrow{background:#ff0;color:#f00;transform:rotate(-4deg);align-self:flex-start;padding:4px 8px}
+.s-antidesign .card{background:#fffe00;border:5px dashed #f0f;border-radius:0}
+.s-antidesign .card:nth-child(2){background:#39ff14;transform:rotate(2deg)}
+.s-antidesign .card:nth-child(3){background:#ff6a00;transform:rotate(-2deg)}
+.s-antidesign .btn{border-radius:0;font-family:"Times New Roman",serif}
+.s-antidesign .btn-p{background:#f0f;color:#0f0;border:3px solid #000}
+.s-antidesign .btn-s{background:#000;color:#f00}
+.s-antidesign .d-cta h2{transform:rotate(-2deg);color:#f0f}
+
+/* 15 MEMPHIS */
+.s-memphis{background:#fdf6e3;color:#1a1a2e;font-family:"Trebuchet MS",var(--sans);position:relative;overflow:hidden}
+.s-memphis .d-nav{background:#ff5f7e;color:#fff}
+.s-memphis .d-hero h1{color:#2d2d6b}
+.s-memphis .d-eyebrow{color:#00b5ad}
+.s-memphis .card{background:#fff;border:3px solid #1a1a2e;border-radius:0;box-shadow:6px 6px 0 #ffd23f}
+.s-memphis .card:nth-child(2){box-shadow:6px 6px 0 #00b5ad}
+.s-memphis .card:nth-child(3){box-shadow:6px 6px 0 #ff5f7e}
+.s-memphis .btn{border:3px solid #1a1a2e;border-radius:0}
+.s-memphis .btn-p{background:#ffd23f;color:#1a1a2e;box-shadow:4px 4px 0 #1a1a2e}
+.s-memphis .btn-s{background:#00b5ad;color:#fff;box-shadow:4px 4px 0 #1a1a2e}
+.s-memphis .blob{position:absolute;z-index:0;pointer-events:none}
+
+/* 16 MAXIMALISMO */
+.s-maximalism{color:#fff;font-family:var(--serif);
+  background:
+   repeating-linear-gradient(45deg,#7b1fa2 0 22px,#6a1b9a 22px 44px),
+   linear-gradient(135deg,#e91e63,#ff9800)}
+.s-maximalism .d-nav{background:linear-gradient(90deg,#ff1744,#f50057,#d500f9);border-bottom:4px solid #ffd600}
+.s-maximalism .d-brand{font-size:26px;text-shadow:2px 2px 0 #000}
+.s-maximalism .d-hero h1{font-size:clamp(42px,9vw,110px);color:#ffd600;text-shadow:4px 4px 0 #d500f9,8px 8px 0 #00e5ff}
+.s-maximalism .card{background:linear-gradient(160deg,#1a237e,#4a148c);border:3px solid #ffd600;border-radius:20px;color:#fff;box-shadow:0 0 0 6px #e91e63}
+.s-maximalism .card:nth-child(2){background:linear-gradient(160deg,#004d40,#1b5e20);box-shadow:0 0 0 6px #ff9800}
+.s-maximalism .card:nth-child(3){background:linear-gradient(160deg,#b71c1c,#880e4f);box-shadow:0 0 0 6px #00e5ff}
+.s-maximalism .btn{border:3px solid #000;border-radius:14px;font-family:var(--sans);font-weight:900}
+.s-maximalism .btn-p{background:#ffd600;color:#000}
+.s-maximalism .btn-s{background:#d500f9;color:#fff}
+.s-maximalism .d-cta h2{color:#ffd600;text-shadow:3px 3px 0 #d500f9}
+
+/* 17 Y2K */
+.s-y2k{color:#03123b;font-family:"Trebuchet MS",Verdana,var(--sans);
+  background:linear-gradient(180deg,#b8e6ff,#dcefff 40%,#c8f0ff)}
+.s-y2k .d-nav{background:linear-gradient(#f7fbff,#b9cbe0);border-bottom:2px solid #7f9bc4;
+  box-shadow:inset 0 1px 0 #fff}
+.s-y2k .d-brand{background:linear-gradient(#8ad4ff,#1e6fd0);-webkit-background-clip:text;background-clip:text;color:transparent;font-style:italic;font-weight:800}
+.s-y2k .d-hero h1{color:#1552b0;text-shadow:0 1px 0 #fff,0 2px 4px #6fa0d8;font-style:italic}
+.s-y2k .d-eyebrow{color:#c0392b}
+.s-y2k .card{background:linear-gradient(#ffffff,#d7e8fb);border:1px solid #9fbbe0;border-radius:14px;
+  box-shadow:inset 0 1px 0 #fff,0 6px 14px -6px rgba(30,80,160,.5)}
+.s-y2k .btn{border-radius:999px;border:1px solid #2b64a8}
+.s-y2k .btn-p{background:linear-gradient(#8fd0ff,#2f7fd8);color:#fff;box-shadow:inset 0 1px 0 rgba(255,255,255,.7)}
+.s-y2k .btn-s{background:linear-gradient(#fff,#cfe0f2);color:#1552b0}
+
+/* 18 NEÓN / CYBERPUNK */
+.s-neon{background:#05010f;color:#e8f0ff;font-family:var(--mono);position:relative;overflow:hidden}
+.s-neon::after{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;background:
+  linear-gradient(transparent 95%,#ff00e622 95%) 0 0/100% 32px,
+  linear-gradient(90deg,transparent 95%,#00fff722 95%) 0 0/32px 100%;mask:linear-gradient(#000,transparent 70%)}
+.s-neon>*{position:relative;z-index:1}
+.s-neon .d-nav{border-bottom:1px solid #ff00e6}
+.s-neon .d-brand{color:#00fff7;text-shadow:0 0 8px #00fff7,0 0 20px #00fff7}
+.s-neon .d-hero h1{color:#fff;text-shadow:0 0 10px #ff00e6,0 0 30px #ff00e6,0 0 60px #ff00e6;text-transform:uppercase}
+.s-neon .d-eyebrow{color:#00fff7}
+.s-neon .card{background:rgba(255,0,230,.04);border:1px solid #ff00e6;border-radius:6px;box-shadow:0 0 18px -4px #ff00e6,inset 0 0 18px -8px #ff00e6}
+.s-neon .card:nth-child(2){border-color:#00fff7;box-shadow:0 0 18px -4px #00fff7,inset 0 0 18px -8px #00fff7}
+.s-neon .card:nth-child(3){border-color:#faff00;box-shadow:0 0 18px -4px #faff00,inset 0 0 18px -8px #faff00}
+.s-neon .btn{border-radius:4px;background:transparent;text-transform:uppercase;letter-spacing:.1em}
+.s-neon .btn-p{color:#00fff7;border:1px solid #00fff7;box-shadow:0 0 14px -2px #00fff7,inset 0 0 14px -6px #00fff7}
+.s-neon .btn-s{color:#ff00e6;border:1px solid #ff00e6;box-shadow:0 0 14px -2px #ff00e6}
+.s-neon .d-cta h2{color:#faff00;text-shadow:0 0 12px #faff00,0 0 40px #faff00}
+
+/* 19 GRADIENTES / AURORA */
+.s-gradient{color:#0f1020;font-family:var(--sans);position:relative;background:#0a0a1f}
+.s-gradient::before{content:"";position:fixed;inset:-20%;z-index:0;filter:blur(70px);background:
+  radial-gradient(30vw 30vw at 20% 30%,#7c4dff,transparent 60%),
+  radial-gradient(34vw 34vw at 80% 25%,#ff4d9d,transparent 60%),
+  radial-gradient(30vw 30vw at 55% 80%,#00e5c0,transparent 60%),
+  radial-gradient(30vw 30vw at 10% 85%,#ffb020,transparent 60%);animation:aur 14s ease-in-out infinite alternate}
+@keyframes aur{to{transform:translate(4%,-3%) scale(1.1)}}
+.s-gradient>*{position:relative;z-index:1;color:#fff}
+.s-gradient .d-hero h1{background:linear-gradient(120deg,#fff,#ffd6f0);-webkit-background-clip:text;background-clip:text;color:transparent;font-weight:800}
+.s-gradient .card{background:rgba(255,255,255,.1);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,.22);border-radius:22px}
+.s-gradient .btn{border-radius:999px}
+.s-gradient .btn-p{background:#fff;color:#5b1fd0}
+.s-gradient .btn-s{background:rgba(255,255,255,.15);color:#fff;border:1px solid rgba(255,255,255,.4)}
+
+/* 20 KINETIC */
+.s-kinetic{background:#0a0a0a;color:#fff;font-family:"Arial Black",Impact,var(--sans);overflow-x:hidden}
+.s-kinetic .d-nav{border-bottom:1px solid #333}
+.s-kinetic .btn{border-radius:0;border:2px solid #fff;background:transparent;color:#fff;text-transform:uppercase}
+.s-kinetic .btn-p{background:#fff;color:#000}
+.s-kinetic .marq{overflow:hidden;white-space:nowrap;border-block:1px solid #333;padding:14px 0}
+.s-kinetic .marq span{display:inline-block;font-size:clamp(40px,9vw,120px);font-weight:900;text-transform:uppercase;letter-spacing:-.03em;padding-right:40px;animation:marq 16s linear infinite}
+.s-kinetic .marq.rev span{animation-direction:reverse;color:#ff3b3b;-webkit-text-stroke:2px #ff3b3b;color:transparent}
+@keyframes marq{to{transform:translateX(-50%)}}
+.s-kinetic .k-big{font-size:clamp(60px,20vw,260px);font-weight:900;line-height:.82;text-transform:uppercase;letter-spacing:-.05em;padding:6vh 5vw}
+.s-kinetic .k-big em{font-style:italic;color:transparent;-webkit-text-stroke:2px #fff}
+
+/* 21 SCROLLYTELLING */
+.s-scrolly{background:#000;color:#fff;font-family:var(--sans)}
+.s-scrolly .scene{min-height:100vh;display:flex;flex-direction:column;justify-content:center;padding:0 8vw;position:relative}
+.s-scrolly .scene h2{font-size:clamp(34px,7vw,86px);line-height:1;margin:0 0 18px;letter-spacing:-.02em}
+.s-scrolly .scene p{max-width:46ch;font-size:20px;opacity:.9}
+.s-scrolly .s1{background:linear-gradient(160deg,#0d1b3e,#000)}
+.s-scrolly .s2{background:linear-gradient(160deg,#3e0d2b,#000)}
+.s-scrolly .s3{background:linear-gradient(160deg,#0d3e2b,#000)}
+.s-scrolly .s4{background:linear-gradient(160deg,#3e2d0d,#000)}
+.s-scrolly .num{font-family:var(--mono);font-size:14px;letter-spacing:.3em;opacity:.6;margin-bottom:14px}
+.s-scrolly .btn{border-radius:999px;background:#fff;color:#000}
+
+/* 22 UI ESPACIAL */
+.s-spatial{color:#fff;font-family:var(--sans);position:relative;
+  background:radial-gradient(120vw 90vh at 50% -10%,#243b6b,#0a0f1e 60%,#05070f)}
+.s-spatial::before{content:"";position:fixed;inset:0;z-index:0;pointer-events:none;
+  background:radial-gradient(1px 1px at 20% 30%,#fff,transparent),radial-gradient(1px 1px at 70% 60%,#fff,transparent),
+  radial-gradient(1px 1px at 40% 80%,#fff8,transparent),radial-gradient(1px 1px at 85% 20%,#fff,transparent);
+  background-size:cover;opacity:.6}
+.s-spatial>*{position:relative;z-index:1}
+.s-spatial .d-hero h1{font-weight:600}
+.s-spatial .card{background:rgba(255,255,255,.08);backdrop-filter:blur(30px) saturate(150%);-webkit-backdrop-filter:blur(30px) saturate(150%);
+  border:1px solid rgba(255,255,255,.18);border-radius:30px;box-shadow:0 40px 90px -40px #000,inset 0 1px 0 rgba(255,255,255,.3);
+  transform:perspective(1200px) rotateX(6deg);transition:transform .3s}
+.s-spatial .card:hover{transform:perspective(1200px) rotateX(0deg) translateY(-8px)}
+.s-spatial .btn{border-radius:999px;padding:16px 34px}
+.s-spatial .btn-p{background:rgba(255,255,255,.92);color:#0a0f1e}
+.s-spatial .btn-s{background:rgba(255,255,255,.12);color:#fff;border:1px solid rgba(255,255,255,.35)}
+
+/* 23 3D / ISOMÉTRICO */
+.s-isometric{background:#eef1ff;color:#25234a;font-family:var(--sans)}
+.s-isometric .d-hero h1{color:#4b3fd6}
+.s-isometric .d-features{perspective:1400px}
+.s-isometric .card{background:#fff;border-radius:16px;border:1px solid #d8ddff;
+  transform:rotateX(45deg) rotateZ(-30deg);transform-style:preserve-3d;
+  box-shadow:14px 22px 0 #b9c2ff,28px 44px 0 -8px #9aa6ff;transition:transform .3s}
+.s-isometric .card:hover{transform:rotateX(0) rotateZ(0)}
+.s-isometric .card h3,.s-isometric .card p{transform:translateZ(1px)}
+.s-isometric .btn{border-radius:12px}
+.s-isometric .btn-p{background:#4b3fd6;color:#fff;box-shadow:0 8px 0 #2f269e}
+.s-isometric .btn-s{background:#ffd23f;color:#3a2e00;box-shadow:0 8px 0 #c99f00}
+
+/* 24 HAND-DRAWN / DOODLE */
+.s-handdrawn{background:#fffef7;color:#2b2b2b;font-family:"Comic Sans MS","Segoe Print","Bradley Hand",cursive;
+  background-image:radial-gradient(#e8e6d8 1px,transparent 1px);background-size:22px 22px}
+.s-handdrawn .d-nav{border-bottom:3px solid #2b2b2b}
+.s-handdrawn .d-hero h1{transform:rotate(-1deg)}
+.s-handdrawn .card{background:#fff;border:3px solid #2b2b2b;border-radius:255px 15px 225px 15px/15px 225px 15px 255px}
+.s-handdrawn .card:nth-child(2){transform:rotate(1deg);border-radius:15px 225px 15px 255px/225px 15px 255px 15px}
+.s-handdrawn .card:nth-child(3){transform:rotate(-1.4deg)}
+.s-handdrawn .btn{border:3px solid #2b2b2b;background:#fff;color:#2b2b2b;border-radius:255px 15px 225px 15px/15px 225px 15px 255px}
+.s-handdrawn .btn-p{background:#ffe14d}
+.s-handdrawn .btn-s{background:#a0e7ff}
+.s-handdrawn .d-cta h2{transform:rotate(-1deg)}
+
+/* 25 DARK MODE */
+.s-darkmode{background:#0d1117;color:#c9d1d9;font-family:var(--sans)}
+.s-darkmode .d-nav{background:#161b22;border-bottom:1px solid #21262d}
+.s-darkmode .d-brand{color:#58a6ff}
+.s-darkmode .d-hero h1{color:#f0f6fc}
+.s-darkmode .d-eyebrow{color:#3fb950}
+.s-darkmode .card{background:#161b22;border:1px solid #21262d;border-radius:12px}
+.s-darkmode .card .c-ico{color:#58a6ff}
+.s-darkmode .btn{border-radius:8px}
+.s-darkmode .btn-p{background:#238636;color:#fff}
+.s-darkmode .btn-s{background:#21262d;color:#c9d1d9;border:1px solid #30363d}
+.s-darkmode .d-cta{background:#161b22;margin:0 4vw;border-radius:14px;border:1px solid #21262d}
+
+/* bento grid custom */
+.bento-grid{display:grid;grid-template-columns:repeat(4,1fr);grid-auto-rows:120px;gap:16px;padding:4vh 5vw}
+.bento-grid .bx{background:#fff;border-radius:20px;padding:22px;box-shadow:0 2px 10px rgba(20,25,40,.06);display:flex;flex-direction:column;justify-content:space-between;overflow:hidden}
+.bento-grid .bx h3{margin:0;font-size:17px}
+.bento-grid .bx p{margin:0;font-size:13px;color:#5a6072}
+.bento-grid .big-n{font-size:44px;font-weight:800;letter-spacing:-.03em}
+.bx.b-hero{grid-column:span 2;grid-row:span 2;background:linear-gradient(160deg,#111318,#2a2f3a);color:#fff}
+.bx.b-w2{grid-column:span 2}.bx.b-h2{grid-row:span 2}
+.bx.acc1{background:#eafff2}.bx.acc2{background:#eef1ff}.bx.acc3{background:#fff3e6}.bx.acc4{background:#111318;color:#fff}
+@media(max-width:760px){.bento-grid{grid-template-columns:repeat(2,1fr)}.bx.b-hero{grid-column:span 2}}
+
+/* editorial custom */
+.ed-wrap{padding:5vh 6vw;max-width:1100px;margin:0 auto}
+.ed-cols{column-count:2;column-gap:40px;column-rule:1px solid #ddd;margin-top:28px}
+.ed-cols p{margin:0 0 16px;font-size:16px;line-height:1.7}
+.ed-cols p:first-child::first-letter{font-size:64px;float:left;line-height:.7;padding:6px 10px 0 0;font-weight:700}
+.ed-hero-t{font-size:clamp(44px,9vw,110px);line-height:.95;font-weight:700;margin:0;text-wrap:balance}
+.ed-deck{font-style:italic;font-size:22px;color:#555;max-width:60ch;margin:18px 0 0}
+.ed-meta{font-family:var(--sans);font-size:12px;text-transform:uppercase;letter-spacing:.14em;color:#8a1c1c;margin-bottom:10px}
+@media(max-width:680px){.ed-cols{column-count:1}}
+
+/* kinetic custom hero handled by classes above */
+
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important}
+}
+@media(max-width:560px){
+  .node{width:calc(50% - 8px)}
+  .d-links{display:none}
+}
+</style>
+
+<!-- ================= GALERÍA PRINCIPAL ================= -->
+<main id="gallery" class="wrap">
+  <header class="masthead">
+    <button class="theme-tgl" id="themeBtn">◐ Tema</button>
+    <p class="kicker">Museo evolutivo · UI / UX</p>
+    <h1>Genealogía del diseño de interfaces</h1>
+    <p class="lead">25 estilos organizados por linaje. El color marca la era: <strong style="color:var(--anc)">ámbar = raíces/antecesores</strong>, <strong style="color:var(--trans)">violeta = transición</strong>, <strong style="color:var(--mod)">índigo = modernos</strong>. Cada familia fluye de lo más antiguo a lo más nuevo. Haz clic en cualquier estilo para entrar a una página completa hecha en ese estilo.</p>
+    <div class="legend">
+      <span class="lg"><span class="dot anc"></span> Antecesor · raíz del linaje</span>
+      <span class="lg"><span class="dot trans"></span> Transición · puente entre eras</span>
+      <span class="lg"><span class="dot mod"></span> Moderno · descendiente actual</span>
+    </div>
+  </header>
+
+  <div class="scale">
+    <div class="scale-bar"></div>
+    <div class="scale-ticks"><span>1950s</span><span>2000</span><span>2013</span><span>2020</span><span>2025 →</span></div>
+  </div>
+
+  <div class="lanes" id="lanes"></div>
+
+  <footer style="padding:30px 0 70px;border-top:1px solid var(--line);color:var(--muted);font-size:13.5px">
+    Galería interactiva de estilos de diseño · Cada demo es una página ficticia creada para resaltar su estética.
+  </footer>
+</main>
+
+<!-- ================= HOST DE DEMOS ================= -->
+<div class="demo-host" id="host">
+  <div id="demoRoot"></div>
+  <button class="backbtn" id="backBtn">← Volver a la galería</button>
+</div>
+
+<script>
+/* ---------- Datos ---------- */
+const FAMILIES = [
+  {n:"A", t:"Superficie & Profundidad", d:"El eterno debate entre imitar el mundo físico y aplanarlo. De la textura realista al cristal líquido."},
+  {n:"B", t:"Orden & Retícula", d:"La disciplina de la cuadrícula suiza reencarnada en el minimalismo y las cajas bento."},
+  {n:"C", t:"Ruptura & Crudeza", d:"Romper las reglas a propósito: de lo tosco y sin pulir a lo deliberadamente incómodo."},
+  {n:"D", t:"Exceso & Color", d:"Cuando más es más: geometría ochentera, cromados del 2000 y neón infinito."},
+  {n:"E", t:"Movimiento & Espacio", d:"El diseño que se mueve, narra y sale de la pantalla hacia las tres dimensiones."},
+];
+
+const S = [
+/* A */
+{id:"skeuomorphism",fam:0,era:"ancestor",year:2007,name:"Skeuomorfismo",tag:"Imita objetos reales: cuero, papel, relieve.",
+ swatch:"linear-gradient(#fffdf5,#e0d3b0);box-shadow:inset 0 2px 4px #fff,inset 0 -8px 12px #cbb98d",
+ brand:"Bitácora",links:["Notas","Agenda","Ajustes"],eyebrow:"Tu diario personal",title:"Escribe como en papel de verdad",
+ sub:"Cuero cosido, hojas con textura y botones que se hunden al pulsarlos. Todo se siente tangible.",cta1:"Abrir cuaderno",cta2:"Ver plumas",
+ feats:[["📓","Cuero real","Costuras, sombras y grano que imitan una libreta física."],["🖋️","Tinta con brillo","Botones lustrosos con biseles y reflejos convincentes."],["📎","Objetos familiares","Clips, marcadores y pestañas que ya sabes usar."]],
+ big:"Si parece papel, lo entiendes sin instrucciones.",foot:"Bitácora · Diseño skeuomórfico, como iOS 1–6."},
+
+{id:"flat",fam:0,era:"transition",year:2013,name:"Flat Design",tag:"Adiós texturas: color plano y 2D puro.",
+ swatch:"linear-gradient(90deg,#1abc9c 33%,#3498db 33% 66%,#e74c3c 66%)",
+ brand:"Plano",links:["Producto","Precios","Blog"],eyebrow:"Simple y directo",title:"Sin sombras. Sin trucos. Solo color.",
+ sub:"La reacción contra el realismo: superficies planas, colores sólidos y formas limpias que cargan rápido.",cta1:"Empezar gratis",cta2:"Saber más",
+ feats:[["■","Color sólido","Paletas vibrantes sin degradados ni relieves."],["▲","Iconografía simple","Formas geométricas legibles a cualquier tamaño."],["●","Rendimiento","Menos efectos, más velocidad de carga."]],
+ big:"Menos decoración, más contenido.",foot:"Plano · Estilo popularizado por iOS 7 y Metro."},
+
+{id:"material",fam:0,era:"transition",year:2014,name:"Material Design",fq:1,tag:"Papel y tinta con capas, sombras y movimiento.",
+ swatch:"linear-gradient(#5c6bc0,#3f51b5);box-shadow:0 6px 10px rgba(0,0,0,.3)",
+ brand:"Elevar",links:["Cuenta","Tarjetas","Ayuda"],eyebrow:"Sistema de Google",title:"Superficies de papel con física real",
+ sub:"Cada tarjeta tiene elevación, las sombras cuentan la jerarquía y el movimiento tiene sentido.",cta1:"Crear cuenta",cta2:"Explorar",
+ feats:[["🗂️","Elevación","Sombras por capas que indican profundidad y foco."],["✳️","Color intencional","Un primario y un acento que guían la acción."],["⚡","Movimiento útil","Transiciones que explican de dónde viene cada cosa."]],
+ big:"El papel encontró la física.",foot:"Elevar · Basado en Material Design de Google."},
+
+{id:"neumorphism",fam:0,era:"modern",year:2020,name:"Neumorfismo",tag:"Extruido del fondo: sombra suave doble.",
+ swatch:"background:#e0e5ec;box-shadow:inset 5px 5px 10px #bcc2cc,inset -5px -5px 10px #fff",
+ brand:"Suave",links:["Casa","Escenas","Perfil"],eyebrow:"Hogar inteligente",title:"Controles que emergen del fondo",
+ sub:"El mismo color en todo, con sombras claras y oscuras que dan un relieve delicado y minimalista.",cta1:"Encender todo",cta2:"Escenas",
+ feats:[["🌡️","Relieve suave","Elementos que parecen presionados en la superficie."],["🔘","Mono-color","Una sola tonalidad, sombras que hacen la forma."],["🌙","Táctil y sutil","Perfecto para dashboards calmados y elegantes."]],
+ big:"Presiona, y la interfaz se hunde contigo.",foot:"Suave · Neumorfismo / Soft UI."},
+
+{id:"glassmorphism",fam:0,era:"modern",year:2020,name:"Glassmorfismo",tag:"Vidrio esmerilado translúcido y borroso.",
+ swatch:"background:rgba(255,255,255,.25);backdrop-filter:blur(6px);border:1px solid rgba(255,255,255,.5);background-image:linear-gradient(120deg,#ff5c9d,#5cc8ff)",
+ brand:"Cristal",links:["Clima","Mapas","Ciudades"],eyebrow:"El tiempo, hoy",title:"Paneles de cristal sobre color",
+ sub:"Transparencia, desenfoque de fondo y bordes luminosos: la interfaz flota como vidrio esmerilado.",cta1:"Mi ubicación",cta2:"Añadir ciudad",
+ feats:[["🌫️","Desenfoque","backdrop-filter que difumina lo que hay detrás."],["💎","Translúcido","Capas semitransparentes con bordes de luz."],["✨","Profundidad","Sensación de vidrios apilados y flotantes."]],
+ big:"Ver a través de las cosas, con estilo.",foot:"Cristal · Glassmorfismo, como macOS Big Sur y Windows 11."},
+
+{id:"claymorphism",fam:0,era:"modern",year:2021,name:"Claymorfismo",tag:"Plastilina 3D: inflado, suave y redondo.",
+ swatch:"background:#7c6bff;border-radius:18px;box-shadow:inset 4px 4px 8px rgba(255,255,255,.5),inset -4px -4px 8px rgba(0,0,0,.2),0 8px 14px -6px #5a4bd4",
+ brand:"Burbuja",links:["Jugar","Retos","Premios"],eyebrow:"Aprender jugando",title:"Suave, mullido y divertido",
+ sub:"Esquinas muy redondeadas, doble sombra y colores pastel: todo parece hecho de plastilina.",cta1:"¡A jugar!",cta2:"Ver retos",
+ feats:[["🫧","Inflado","Formas gruesas y redondas que invitan a tocar."],["🎨","Pastel","Colores suaves y amables para todo público."],["🧸","Amigable","Ideal para apps infantiles y landing pages alegres."]],
+ big:"Diseño que quieres apretar.",foot:"Burbuja · Claymorfismo."},
+
+{id:"liquidglass",fam:0,era:"modern",year:2025,name:"Liquid Glass",tag:"Cristal líquido que refracta y reacciona.",
+ swatch:"background:linear-gradient(120deg,#3b82ff,#00e0c8);border-radius:14px;box-shadow:inset 0 1px 0 rgba(255,255,255,.6)",
+ brand:"Fluir",links:["Inicio","Apps","Cuenta"],eyebrow:"El nuevo material de Apple",title:"Cristal que fluye con la luz",
+ sub:"La evolución del glassmorfismo: refracción óptica real, reflejos dinámicos y transparencia que se adapta al contenido.",cta1:"Actualizar ahora",cta2:"Ver novedades",
+ feats:[["🌊","Líquido","Superficies que se deforman y reaccionan al movimiento."],["🔮","Refracción","La luz se dobla como en cristal físico real."],["🪞","Adaptativo","La transparencia responde a lo que hay debajo."]],
+ big:"El vidrio, por fin, cobró vida.",foot:"Fluir · Liquid Glass, iOS 26 / macOS 26 (2025)."},
+
+/* B */
+{id:"swiss",fam:1,era:"ancestor",year:1957,name:"Swiss / Internacional",tag:"Retícula rigurosa, Helvetica y rojo.",
+ swatch:"background:#fff;border-left:10px solid #e2231a;box-shadow:inset 0 0 0 2px #000",
+ brand:"GRID",links:["Trabajo","Índice","Contacto"],eyebrow:"Estilo internacional",title:"Orden. Retícula. Tipografía.",
+ sub:"La escuela suiza: Helvetica, asimetría equilibrada y una cuadrícula que manda sobre todo lo demás.",cta1:"Ver índice",cta2:"Contacto",
+ feats:[["01","Retícula","Cada elemento alineado a una columna estricta."],["02","Helvetica","Tipografía neutra, objetiva y funcional."],["03","Rojo","Un único acento para lo que de verdad importa."]],
+ big:"La forma sigue a la función.",foot:"GRID · Estilo tipográfico internacional suizo, 1950s."},
+
+{id:"minimalism",fam:1,era:"modern",year:2010,name:"Minimalismo",tag:"Menos es más: espacio y esencia.",
+ swatch:"background:#fbfbfa;box-shadow:inset 0 0 0 1px #e2e2df;background-image:linear-gradient(90deg,transparent 46%,#1a1a1a 46% 54%,transparent 54%)",
+ brand:"menos",links:["obra","sobre","contacto"],eyebrow:"estudio de diseño",title:"solo lo esencial",
+ sub:"Mucho espacio en blanco, tipografía ligera y una jerarquía tan clara que no necesita adornos.",cta1:"ver obra",cta2:"escribir",
+ feats:[["","Espacio","El vacío también comunica y da respiro."],["","Ligereza","Tipografía fina, sin ruido visual."],["","Foco","Nada sobra: cada elemento gana su lugar."]],
+ big:"lo que quitas importa más que lo que pones.",foot:"menos · minimalismo."},
+
+{id:"editorial",fam:1,era:"modern",year:2016,name:"Editorial / Magazine",tag:"Tipografía protagonista y columnas.",
+ swatch:"background:#fff;box-shadow:inset 0 0 0 1px #111;background-image:linear-gradient(#111 2px,transparent 2px),linear-gradient(#111 1px,transparent 1px);background-size:100% 14px,100% 8px;background-position:0 20%,0 60%",
+ layout:"editorial",brand:"LA REVISTA",links:["Cultura","Diseño","Ensayo"],
+ edMeta:"Ensayo · Nº 42",edTitle:"El regreso de la tinta",edDeck:"Por qué las pantallas vuelven a mirar a las revistas impresas en busca de jerarquía, ritmo y elegancia.",
+ edBody:["La tipografía deja de ser un vehículo neutro para convertirse en la protagonista absoluta. Columnas, capitulares y contrastes dramáticos entre serif y sans construyen un ritmo de lectura que recuerda al papel.",
+  "El diseño editorial digital toma prestado todo lo bueno de la prensa: la mancha de texto, los filetes finos, la fotografía a sangre y una jerarquía que guía el ojo con autoridad.",
+  "No se trata de decorar, sino de componer. Cada salto de tamaño, cada cursiva y cada blanco tienen la intención de que el lector no pueda dejar de bajar por la página.",
+  "El resultado es una experiencia que se siente curada, lenta en el buen sentido, hecha para leerse y no solo para escanearse."],
+ foot:"LA REVISTA · Diseño editorial."},
+
+{id:"bento",fam:1,era:"modern",year:2022,name:"Bento",tag:"Cuadrícula modular de cajas de distinto tamaño.",
+ swatch:"background:#f2f3f7;background-image:linear-gradient(#fff 0 0);background-size:0;box-shadow:inset 6px 6px 0 -2px #fff,inset -6px -6px 0 -2px #fff, inset 40px 0 0 -34px #dfe3ee",
+ layout:"bento",brand:"Bento",links:["Producto","Docs","Precios"],
+ foot:"Bento · Cuadrícula modular tipo caja japonesa."},
+
+/* C */
+{id:"brutalism",fam:2,era:"ancestor",year:2014,name:"Brutalismo",tag:"Crudo, tosco, HTML sin pulir a propósito.",
+ swatch:"background:#fff;box-shadow:inset 0 0 0 4px #000;background-image:linear-gradient(#000,#000);background-size:60% 3px;background-repeat:no-repeat;background-position:12px 60%",
+ brand:"BRUT.",links:["INDEX","INFO","MAIL"],eyebrow:"WEB BRUT",title:"ESTO ES UNA PÁGINA WEB.",
+ sub:"Sin florituras. Tipografía de sistema, enlaces azules subrayados, bordes duros y honestidad radical.",cta1:"CLIC AQUÍ",cta2:"O AQUÍ",
+ feats:[["#","CRUDO","La estructura desnuda, sin maquillaje ni suavizado."],["#","HONESTO","Un enlace parece un enlace. Un botón, un botón."],["#","RÁPIDO","Cero adornos = cero peso innecesario."]],
+ big:"LA FEALDAD TAMBIÉN ES UNA DECLARACIÓN.",foot:"BRUT. · Brutalismo web."},
+
+{id:"neobrutalism",fam:2,era:"modern",year:2021,name:"Neo-Brutalismo",tag:"Brutalismo pop: bordes negros y sombra dura.",
+ swatch:"background:#fdec5f;box-shadow:6px 6px 0 #000, inset 0 0 0 4px #000",
+ brand:"POP!",links:["Features","Pricing","Login"],eyebrow:"Sin miedo al color",title:"Grueso, chillón y con actitud",
+ sub:"Bordes negros gruesos, sombras duras sin blur y colores que gritan. Lo crudo, pero divertido.",cta1:"Prueba gratis",cta2:"Ver demo",
+ feats:[["◆","Bordes gruesos","Contornos negros marcados en todo elemento."],["◆","Sombra dura","Offset sólido, sin difuminar, muy tangible."],["◆","Color pop","Amarillos, rosas y cianes que no piden permiso."]],
+ big:"Diseño con carácter, no con miedo.",foot:"POP! · Neo-brutalismo, como Gumroad o Figma."},
+
+{id:"antidesign",fam:2,era:"modern",year:2020,name:"Anti-Design",tag:"Deliberadamente 'feo' y roto para destacar.",
+ swatch:"background:#00d2ff;background-image:linear-gradient(45deg,#f0f 25%,transparent 25%),linear-gradient(-45deg,#0f0 25%,transparent 25%);background-size:14px 14px",
+ brand:"¿¡DiSeÑo!?",links:["¿qué?","¿por qué?","¡no!"],eyebrow:"reglas rotas",title:"a propósito INCÓMODO",
+ sub:"Colores que chocan, tipografías mezcladas, elementos rotados. El caos como declaración estética.",cta1:"clic (?)",cta2:"NO clic",
+ feats:[["!?","Choque","Combinaciones de color imposibles y estridentes."],["!?","Desalineado","Nada está donde 'debería' estar."],["!?","Mezcla","Comic Sans y Times conviviendo sin vergüenza."]],
+ big:"si molesta, es que funciona.",foot:"¿¡DiSeÑo!? · Anti-design."},
+
+/* D */
+{id:"memphis",fam:3,era:"ancestor",year:1981,name:"Memphis",tag:"Geometría ochentera: zigzags, lunares, color.",
+ swatch:"background:#fdf6e3;background-image:radial-gradient(#ff5f7e 3px,transparent 3px),radial-gradient(#00b5ad 3px,transparent 3px);background-size:16px 16px;background-position:0 0,8px 8px",
+ brand:"MEMPHIS 85",links:["Fiesta","Formas","Colores"],eyebrow:"1981 forever",title:"Formas locas de los ochenta",
+ sub:"Geometría juguetona, colores brillantes, lunares y zigzags. El caos ordenado del diseño Memphis.",cta1:"Unirse",cta2:"Ver formas",
+ feats:[["▲","Geometría","Triángulos, círculos y squiggles por todas partes."],["●","Color pop","Menta, rosa chicle y amarillo eléctrico."],["≈","Patrones","Zigzags y lunares como firma inconfundible."]],
+ big:"El futuro, imaginado en 1985.",foot:"MEMPHIS 85 · Grupo Memphis de Milán, 1980s."},
+
+{id:"maximalism",fam:3,era:"modern",year:2018,name:"Maximalismo",tag:"Más es más: capas, patrones y color intenso.",
+ swatch:"background:linear-gradient(135deg,#e91e63,#ff9800);background-image:repeating-linear-gradient(45deg,#7b1fa2 0 8px,transparent 8px 16px)",
+ brand:"¡MÁS!",links:["Todo","Extra","Aún Más"],eyebrow:"exceso glorioso",title:"MÁS es más es MÁS",
+ sub:"Colores intensos, texturas apiladas, tipografías gigantes y patrones sin descanso. Abundancia total.",cta1:"QUIERO TODO",cta2:"y más",
+ feats:[["★","Capas","Fondos, patrones y bordes superpuestos sin límite."],["✦","Color","Joyas saturadas peleando por tu atención."],["✹","Tipografía","Enorme, decorada y con múltiples familias."]],
+ big:"¿Por qué elegir, si puedes tenerlo TODO?",foot:"¡MÁS! · Maximalismo."},
+
+{id:"y2k",fam:3,era:"ancestor",year:2000,name:"Retro / Y2K",tag:"Cromados, burbujas y futurismo del 2000.",
+ swatch:"background:linear-gradient(#eaf6ff,#8fb2e8);box-shadow:inset 0 2px 0 #fff, inset 0 -6px 8px #6fa0d8;border-radius:8px",
+ brand:"Y2K.com",links:["Portal","Chat","Descargas"],eyebrow:"Bienvenid@ a la red",title:"El futuro, versión año 2000",
+ sub:"Degradados cromados, burbujas de aqua, brillos e italics futuristas. La estética optimista del nuevo milenio.",cta1:"Entrar ✦",cta2:"Descargar",
+ feats:[["◈","Cromado","Metales pulidos y azules aqua translúcidos."],["✧","Burbujas","Botones brillantes tipo gel de Mac OS X."],["★","Futurista","Italics, estrellas y optimismo tecno ingenuo."]],
+ big:"El milenio nuevo lo cambiaría todo.",foot:"Y2K.com · Estética del año 2000, Frutiger Aero."},
+
+{id:"neon",fam:3,era:"modern",year:2018,name:"Neón / Cyberpunk",tag:"Fondo oscuro y luces de neón que brillan.",
+ swatch:"background:#05010f;box-shadow:inset 0 0 14px #ff00e6, inset 0 0 4px #00fff7;border:1px solid #ff00e6",
+ brand:"NEÓN//",links:["Sistema","Acceso","Salir"],eyebrow:"night city online",title:"BRILLA EN LA OSCURIDAD",
+ sub:"Negro profundo, saturación máxima y resplandor de neón. Estética cyberpunk, gaming y clubs nocturnos.",cta1:"CONECTAR",cta2:"REGISTRO",
+ feats:[["◢","Glow","Textos y bordes que emiten luz de neón real."],["◤","Contraste","Colores fosforescentes sobre negro absoluto."],["◈","Cyber","Rejillas, scanlines y estética de la ciudad-noche."]],
+ big:"EN LA CIUDAD-NOCHE, LA LUZ ES PODER.",foot:"NEÓN// · Cyberpunk / neón."},
+
+{id:"gradient",fam:3,era:"modern",year:2019,name:"Gradientes / Aurora",tag:"Degradados suaves multicolor tipo aurora.",
+ swatch:"background:radial-gradient(circle at 20% 30%,#7c4dff,transparent 60%),radial-gradient(circle at 80% 70%,#ff4d9d,transparent 60%),radial-gradient(circle at 60% 90%,#00e5c0,transparent 60%),#0a0a1f",
+ brand:"Aurora",links:["Producto","Empresa","Entrar"],eyebrow:"fintech del futuro",title:"Color que fluye como una aurora",
+ sub:"Degradados mesh suaves y vibrantes, con paneles de cristal encima. Etéreo, moderno y premium.",cta1:"Crear cuenta",cta2:"Ver planes",
+ feats:[["🌈","Mesh","Mezclas de color fluidas sin costuras visibles."],["💠","Vibrante","Fondos que respiran y cambian sutilmente."],["🪟","Glass","Paneles translúcidos sobre el degradado."]],
+ big:"El color como estado de ánimo.",foot:"Aurora · Gradientes / mesh gradients, como Stripe."},
+
+/* E */
+{id:"scrolly",fam:4,era:"modern",year:2018,name:"Scrollytelling",tag:"El scroll narra una historia por escenas.",
+ swatch:"background:linear-gradient(#0d1b3e,#3e0d2b);background-image:linear-gradient(90deg,#fff3 1px,transparent 1px);background-size:100% 33%",
+ layout:"scrolly",brand:"EL VIAJE",foot:"EL VIAJE · Scrollytelling / narrativa con scroll."},
+
+{id:"handdrawn",fam:4,era:"modern",year:2019,name:"Hand-drawn / Doodle",tag:"Trazos imperfectos, cercano y humano.",
+ swatch:"background:#fffef7;background-image:radial-gradient(#e8e6d8 1.5px,transparent 1.5px);background-size:12px 12px;box-shadow:inset 0 0 0 3px #2b2b2b",
+ brand:"Boceto",links:["Ideas","Taller","Hola"],eyebrow:"hecho a mano",title:"Dibujado con cariño, no con reglas",
+ sub:"Trazos imperfectos, bordes ondulados y tipografía de marcador. Un diseño humano, cálido y artesanal.",cta1:"¡Escríbenos!",cta2:"Ver taller",
+ feats:[["✎","Imperfecto","Líneas temblorosas que se sienten dibujadas a mano."],["✿","Cercano","Doodles y garabatos que dan calidez humana."],["☺","Artesanal","Como una libreta de bocetos hecha realidad."]],
+ big:"Lo imperfecto también es hermoso.",foot:"Boceto · Estilo hand-drawn / doodle."},
+
+{id:"darkmode",fam:4,era:"modern",year:2019,name:"Dark Mode",tag:"Fondo oscuro, texto claro, acento vivo.",
+ swatch:"background:#0d1117;box-shadow:inset 0 0 0 1px #21262d;background-image:linear-gradient(90deg,#58a6ff,#58a6ff);background-size:40% 3px;background-repeat:no-repeat;background-position:16px 40%",
+ brand:"Nocturno",links:["Panel","Deploys","Logs"],eyebrow:"para quien vive de noche",title:"Menos fatiga, más elegancia",
+ sub:"Fondos oscuros, texto claro y acentos precisos. Descansa la vista, ahorra batería OLED y luce premium.",cta1:"Nuevo deploy",cta2:"Ver logs",
+ feats:[["🌘","Descanso","Reduce la fatiga visual en entornos con poca luz."],["🔋","Batería","Ahorra energía en pantallas OLED."],["💻","Foco","El contenido resalta sobre el fondo oscuro."]],
+ big:"La noche también merece buen diseño.",foot:"Nocturno · Dark mode."},
+
+{id:"isometric",fam:4,era:"modern",year:2020,name:"3D / Isométrico",tag:"Perspectiva isométrica con profundidad.",
+ swatch:"background:#eef1ff;box-shadow:8px 12px 0 #b9c2ff;background-image:linear-gradient(#fff,#fff);background-size:60% 60%;background-repeat:no-repeat;background-position:10% 10%",
+ brand:"Isla",links:["Mundo","Bloques","Crear"],eyebrow:"construye en 3D",title:"Un mundo visto en isométrico",
+ sub:"Tarjetas y objetos inclinados en perspectiva isométrica, con profundidad y sombras sólidas de colores.",cta1:"Construir",cta2:"Explorar",
+ feats:[["◨","Perspectiva","Todo inclinado en el clásico ángulo isométrico."],["◧","Profundidad","Sombras sólidas que dan volumen y altura."],["◩","Lúdico","Ideal para ilustraciones técnicas y juegos."]],
+ big:"Dos dimensiones fingiendo ser tres.",foot:"Isla · 3D / isométrico."},
+
+{id:"kinetic",fam:4,era:"modern",year:2021,name:"Tipografía Cinética",tag:"La tipografía en movimiento como protagonista.",
+ swatch:"background:#0a0a0a;color:#fff;background-image:linear-gradient(#fff,#fff);background-size:70% 8px;background-repeat:no-repeat;background-position:15% 50%",
+ layout:"kinetic",brand:"MUEVE",links:["Fuentes","Sobre","Contacto"],
+ foot:"MUEVE · Tipografía cinética / kinetic type."},
+
+{id:"spatial",fam:4,era:"modern",year:2024,name:"UI Espacial",tag:"Interfaces flotantes en 3D para AR/VR.",
+ swatch:"background:radial-gradient(80% 80% at 50% 0%,#243b6b,#0a0f1e);box-shadow:inset 0 1px 0 rgba(255,255,255,.3);border:1px solid rgba(255,255,255,.18);border-radius:10px",
+ brand:"Órbita",links:["Espacios","Apps","Ajustes"],eyebrow:"visionOS ready",title:"Ventanas que flotan a tu alrededor",
+ sub:"Paneles translúcidos con profundidad real que conviven con tu entorno físico. La interfaz sale de la pantalla.",cta1:"Entrar al espacio",cta2:"Calibrar",
+ feats:[["🛰️","Profundidad","Paneles que flotan a distintas distancias de ti."],["👁️","Mirada","Diseñado para navegar con ojos y manos."],["🌐","Entorno","La UI convive con el mundo real a tu alrededor."]],
+ big:"La pantalla se volvió el espacio entero.",foot:"Órbita · UI espacial, como Apple Vision Pro."},
+];
+
+/* ---------- Render galería ---------- */
+const lanes=document.getElementById('lanes');
+FAMILIES.forEach((f,fi)=>{
+  const lane=document.createElement('section');lane.className='lane';
+  const items=S.filter(s=>s.fam===fi).sort((a,b)=>a.year-b.year);
+  lane.innerHTML=`
+    <div class="lane-head">
+      <span class="lane-num">${f.n}</span>
+      <h2>${f.t}</h2>
+      <p class="lane-desc">${f.d}</p>
+    </div>
+    <div class="lane-arrow"><span>más antiguo</span><span class="bar"></span><span>más nuevo</span></div>
+    <div class="track">${items.map(nodeHTML).join('')}</div>`;
+  lanes.appendChild(lane);
+});
+function eraLabel(e){return e==="ancestor"?"Antecesor":e==="transition"?"Transición":"Moderno";}
+function nodeHTML(s){
+  const sw=/^(linear|radial|conic)-gradient/.test(s.swatch)?'background:'+s.swatch:s.swatch;
+  return `<button class="node node--${s.era}" data-id="${s.id}" aria-label="${s.name}, ${s.year}, ${eraLabel(s.era)}">
+    <span class="era">${eraLabel(s.era)}</span>
+    <span class="swatch" style="${sw}"></span>
+    <span class="n-name">${s.name}</span>
+    <span class="n-year">${s.year}</span>
+    <span class="n-tag">${s.tag}</span>
+  </button>`;
+}
+lanes.addEventListener('click',e=>{
+  const b=e.target.closest('.node');if(b)openDemo(b.dataset.id);
+});
+
+/* ---------- Render demos ---------- */
+const host=document.getElementById('host');
+const demoRoot=document.getElementById('demoRoot');
+function stdDemo(s){
+  return `<div class="demo s-${s.id}">
+    <nav class="d-nav"><div class="d-brand">${s.brand}</div><div class="d-links">${(s.links||[]).map(l=>`<a>${l}</a>`).join('')}</div></nav>
+    <header class="d-hero">
+      <span class="d-eyebrow">${s.eyebrow}</span>
+      <h1>${s.title}</h1>
+      <p class="d-sub">${s.sub}</p>
+      <div class="d-btns"><button class="btn btn-p">${s.cta1}</button><button class="btn btn-s">${s.cta2}</button></div>
+    </header>
+    <section class="d-features">${s.feats.map(f=>`<div class="card"><div class="c-ico">${f[0]}</div><h3>${f[1]}</h3><p>${f[2]}</p></div>`).join('')}</section>
+    <section class="d-cta"><h2>${s.big}</h2><button class="btn btn-p">${s.cta1}</button></section>
+    <footer class="d-foot">${s.foot}</footer>
+  </div>`;
+}
+function bentoDemo(s){
+  return `<div class="demo s-${s.id}">
+    <nav class="d-nav"><div class="d-brand">${s.brand}</div><div class="d-links">${s.links.map(l=>`<a>${l}</a>`).join('')}</div></nav>
+    <div class="bento-grid">
+      <div class="bx b-hero"><div><div class="d-eyebrow" style="opacity:.7">Bento UI</div><h3 style="font-size:30px;line-height:1.05;margin-top:8px">Todo tu producto en cajitas ordenadas</h3></div><button class="btn btn-p" style="align-self:flex-start">Empezar</button></div>
+      <div class="bx acc1"><div class="big-n">98%</div><p>Satisfacción de usuarios</p></div>
+      <div class="bx acc2"><div class="big-n">4.9★</div><p>Valoración media</p></div>
+      <div class="bx b-w2 acc3"><h3>Modular por diseño</h3><p>Cada bloque es una idea. Tamaños distintos crean jerarquía visual sin esfuerzo.</p></div>
+      <div class="bx acc4"><div class="big-n">24/7</div><p>Soporte</p></div>
+      <div class="bx"><h3>Rápido</h3><p>Carga en &lt;1s</p></div>
+      <div class="bx b-w2"><h3>Integraciones</h3><p>Conecta con más de 120 herramientas en un par de clics.</p></div>
+      <div class="bx acc2"><div class="big-n">120+</div><p>Apps conectadas</p></div>
+    </div>
+    <section class="d-cta" style="padding:8vh 6vw"><h2 style="color:#111318">Ordena tu producto, caja por caja.</h2><button class="btn btn-p">Probar Bento</button></section>
+    <footer class="d-foot">${s.foot}</footer>
+  </div>`;
+}
+function editorialDemo(s){
+  return `<div class="demo s-${s.id}">
+    <nav class="d-nav"><div class="d-brand">${s.brand}</div><div class="d-links">${s.links.map(l=>`<a>${l}</a>`).join('')}</div></nav>
+    <article class="ed-wrap">
+      <div class="ed-meta">${s.edMeta}</div>
+      <h1 class="ed-hero-t">${s.edTitle}</h1>
+      <p class="ed-deck">${s.edDeck}</p>
+      <div class="ed-cols">${s.edBody.map(p=>`<p>${p}</p>`).join('')}</div>
+    </article>
+    <footer class="d-foot" style="padding-left:6vw">${s.foot}</footer>
+  </div>`;
+}
+function scrollyDemo(s){
+  const scenes=[
+    ["01 · Inicio","El scroll como narrador","Cada vez que bajas, la historia avanza. El fondo cambia, el texto entra y el ritmo lo marcas tú."],
+    ["02 · Nudo","Escenas a pantalla completa","Cada sección ocupa todo el viewport y transiciona a la siguiente con un cambio de color y atmósfera."],
+    ["03 · Clímax","El movimiento cuenta","Parallax, revelados y micro-animaciones convierten el desplazamiento en una experiencia."],
+    ["04 · Final","Baja para descubrir","El scrollytelling guía la atención paso a paso, como un cuento que se despliega bajo tus dedos."],
+  ];
+  return `<div class="demo s-${s.id}">
+    ${scenes.map((sc,i)=>`<section class="scene s${i+1}"><div class="num">${sc[0]}</div><h2>${sc[1]}</h2><p>${sc[2]}</p>${i===3?'<div style="margin-top:24px"><button class="btn">Volver a empezar</button></div>':'<p style="opacity:.5;margin-top:30px">↓ sigue bajando</p>'}</section>`).join('')}
+    <footer class="d-foot">${s.foot}</footer>
+  </div>`;
+}
+function kineticDemo(s){
+  return `<div class="demo s-${s.id}">
+    <nav class="d-nav"><div class="d-brand">${s.brand}</div><div class="d-links">${s.links.map(l=>`<a>${l}</a>`).join('')}</div></nav>
+    <div class="k-big">LA<br><em>TIPOGRAFÍA</em><br>SE MUEVE.</div>
+    <div class="marq"><span>DISEÑO · MOVIMIENTO · RITMO · ENERGÍA · DISEÑO · MOVIMIENTO · RITMO · ENERGÍA · </span></div>
+    <div class="marq rev"><span>KINETIC TYPE · KINETIC TYPE · KINETIC TYPE · KINETIC TYPE · KINETIC TYPE · KINETIC TYPE · </span></div>
+    <header class="d-hero"><span class="d-eyebrow">fundición tipográfica</span><h1 style="font-size:clamp(30px,6vw,64px)">Cuando las letras bailan, el mensaje golpea más fuerte.</h1>
+      <div class="d-btns"><button class="btn btn-p">Ver fuentes</button><button class="btn">Contacto</button></div></header>
+    <section class="d-cta"><h2 style="font-size:clamp(40px,12vw,140px);font-weight:900;text-transform:uppercase">MUEVE<br>EL TEXTO</h2></section>
+    <footer class="d-foot">${s.foot}</footer>
+  </div>`;
+}
+function renderDemo(s){
+  switch(s.layout){
+    case "bento":return bentoDemo(s);
+    case "editorial":return editorialDemo(s);
+    case "scrolly":return scrollyDemo(s);
+    case "kinetic":return kineticDemo(s);
+    default:return stdDemo(s);
+  }
+}
+function openDemo(id){
+  const s=S.find(x=>x.id===id);if(!s)return;
+  demoRoot.innerHTML=renderDemo(s);
+  host.classList.add('on');document.body.classList.add('locked');
+  host.scrollTop=0;
+  history.pushState({demo:id},"","#"+id);
+}
+function closeDemo(){
+  host.classList.remove('on');document.body.classList.remove('locked');
+  demoRoot.innerHTML="";
+  if(location.hash){history.pushState({},"",location.pathname);}
+}
+document.getElementById('backBtn').addEventListener('click',closeDemo);
+window.addEventListener('keydown',e=>{if(e.key==="Escape"&&host.classList.contains('on'))closeDemo();});
+window.addEventListener('popstate',()=>{
+  const id=location.hash.replace('#','');
+  if(id&&S.find(x=>x.id===id)){openDemoNoPush(id);}else{host.classList.remove('on');document.body.classList.remove('locked');demoRoot.innerHTML="";}
+});
+function openDemoNoPush(id){
+  const s=S.find(x=>x.id===id);demoRoot.innerHTML=renderDemo(s);
+  host.classList.add('on');document.body.classList.add('locked');host.scrollTop=0;
+}
+/* abrir por hash inicial */
+if(location.hash){const id=location.hash.replace('#','');if(S.find(x=>x.id===id))openDemoNoPush(id);}
+
+/* ---------- Theme toggle ---------- */
+const root=document.documentElement;
+document.getElementById('themeBtn').addEventListener('click',()=>{
+  const cur=root.getAttribute('data-theme')||(matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light');
+  root.setAttribute('data-theme',cur==='dark'?'light':'dark');
+});
+</script>
